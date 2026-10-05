@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    Dr. {{ doctor.name }} | Clinical Management System
+{% endblock %}
+
+{% block extra_css %} 
+<link rel="stylesheet" href="{% static 'doctors/css/doctor_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<!-- DOCTOR HEADER -->
+<div class="doctor-header">
+    <div class="doctor-header-left">
+        <div class="doctor-avatar">
+            {{ doctor.name|first|upper }}
+        </div>
+        <div>
+            <h1>Dr. {{ doctor.name }}</h1>
+            <div class="doctor-specialization">
+                {{ doctor.specialization|default:"Specialization not specified" }}
+            </div>
+        </div>
+    </div>
+
+    <div class="doctor-actions">
+        <a href="{% url 'edit_doctor' doctor.id %}" class="btn btn-success">
+            Edit Doctor
+        </a>
+
+        <form
+            method="POST"
+            action="{% url 'delete_doctor' doctor.id %}"
+            style="display: inline;"
+            onsubmit="return confirm('Are you sure you want to delete Dr. {{ doctor.name }}? This action cannot be undone.');"
+        >
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+                Delete Doctor
+            </button>
+        </form>
+
+        <a href="{% url 'dashboard' %}" class="btn">
+            Back
+        </a>
+    </div>
+</div>
+
+
+<!-- APPOINTMENT STATISTICS -->
+<div class="detail-stats">
+    <div class="detail-stat-card">
+        <h4>Total Appointments</h4>
+        <div class="detail-stat-number">{{ total_appointments|default:"0" }}</div>
+    </div>
+    <div class="detail-stat-card">
+        <h4>Waiting</h4>
+        <div class="detail-stat-number">{{ waiting_appointments|default:"0" }}</div>
+    </div>
+    <div class="detail-stat-card">
+        <h4>Visited</h4>
+        <div class="detail-stat-number">{{ visited_appointments|default:"0" }}</div>
+    </div>
+    <div class="detail-stat-card">
+        <h4>Paid</h4>
+        <div class="detail-stat-number">{{ paid_appointments|default:"0" }}</div>
+    </div>
+    <div class="detail-stat-card">
+        <h4>Unpaid</h4>
+        <div class="detail-stat-number">{{ unpaid_appointments|default:"0" }}</div>
+    </div>
+</div>
+
+
+<!-- DOCTOR & FINANCIAL INFO -->
+<div class="detail-grid">
+    <!-- BASIC INFORMATION -->
+    <div class="detail-card">
+        <h2>Doctor Information</h2>
+        <div class="info-row">
+            <span class="info-label">Name</span>
+            <span class="info-value">{{ doctor.name }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Specialization</span>
+            <span class="info-value">{{ doctor.specialization|default:"Not specified" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Off Days</span>
+            <span class="info-value">{{ doctor.off_days|default:"Not specified" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Arrival Time</span>
+            <span class="info-value">
+                {% if doctor.arrival_time %}{{ doctor.arrival_time|time:"h:i A" }}{% else %}Not specified{% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- FINANCIAL INFORMATION -->
+    <div class="detail-card">
+        <h2>Financial Information</h2>
+        <div class="info-row">
+            <span class="info-label">Consultation Fee</span>
+            <span class="info-value">Rs. {{ doctor.fee|floatformat:2 }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Commission Type</span>
+            <span class="info-value">{{ doctor.get_commission_type_display }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Commission Charged</span>
+            <span class="info-value">
+                {% if doctor.commission_type == 'percentage' %}{{ doctor.commission|floatformat:2 }}%{% else %}Rs. {{ doctor.commission|floatformat:2 }}{% endif %}
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Commission / Appointment</span>
+            <span class="info-value">Rs. {{ commission_per_appointment|floatformat:2 }}</span>
+        </div>
+    </div>
+</div>
+
+
+<!-- COMMISSION SUMMARY -->
+<div class="detail-card">
+    <h2>Commission Summary</h2>
+    <p style="color: #64748b; margin-bottom: 20px;">
+        Commission generated from payments received on non-cancelled appointments.
+    </p>
+
+    <div class="commission-summary">
+        <div class="commission-box">
+            <h4>Commission / Full Appointment</h4>
+            <div class="commission-amount">Rs. {{ commission_per_appointment|floatformat:2 }}</div>
+        </div>
+        <div class="commission-box">
+            <h4>Commission Earned</h4>
+            <div class="commission-amount commission-earned">Rs. {{ total_commission|floatformat:2 }}</div>
+        </div>
+        <div class="commission-box">
+            <h4>Commission Paid</h4>
+            <div class="commission-amount commission-paid">Rs. {{ total_commission_paid|floatformat:2 }}</div>
+        </div>
+        <div class="commission-box">
+            <h4>Payment Pending</h4>
+            <div class="commission-amount commission-pending">Rs. {{ total_commission_pending|floatformat:2 }}</div>
+        </div>
+    </div>
+
+    {% if total_commission_pending > 0 %}
+        <div class="commission-action" style="margin-top: 20px;">
+            <a href="{% url 'pay_commission' doctor.id %}" class="btn btn-success">
+                Pay Commission
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+
+<!-- FILTERS -->
+<div class="filter-card">
+    <h3>Filter Appointments</h3>
+    <form method="get" class="filter-form">
+        <div class="filter-group">
+            <label for="patient">Patient</label>
+            <input type="text" id="patient" name="patient" class="filter-input" placeholder="Search patient name..." value="{{ patient_query }}">
+        </div>
+        <div class="filter-group">
+            <label for="from_date">From Date</label>
+            <input type="date" id="from_date" name="from_date" class="filter-input" value="{{ from_date }}">
+        </div>
+        <div class="filter-group">
+            <label for="to_date">To Date</label>
+            <input type="date" id="to_date" name="to_date" class="filter-input" value="{{ to_date }}">
+        </div>
+        <button type="submit" class="filter-button">Filter</button>
+        <a href="{% url 'doctor_detail' doctor.id %}" class="clear-button">Clear</a>
+    </form>
+</div>
+
+
+<!-- APPOINTMENTS TABLE -->
+<div class="table-card">
+    <div class="table-header">
+        <h2>Patient Appointments</h2>
+        <span>
+            {% if patient_query or from_date or to_date %}
+                {{ filtered_appointment_count }} filtered / {{ total_appointments }} total
+            {% else %}
+                {{ total_appointments }} total
+            {% endif %}
+        </span>
+    </div>
+
+    {% if appointments %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Patient</th>
+                    <th>Phone</th>
+                    <th>Date</th>
+                    <th>Token</th>
+                    <th>Type</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th>Consultation Fee</th>
+                    <th>Commission</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appointment in appointments %}
+                    <tr>
+                        <td>
+                            <div class="patient-name">
+                                {{ appointment.patient.name }}
+                            </div>
+                        </td>
+                        <td>{{ appointment.patient.phone }}</td>
+                        <td>{{ appointment.appointment_date|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="token">#{{ appointment.token_number }}</span>
+                        </td>
+                        <td>{{ appointment.get_appointment_type_display }}</td>
+
+                        <!-- PAYMENT STATUS -->
+                        <td>
+                            {% if appointment.payment_status == 'paid' %}
+                                <span class="badge badge-paid">Paid</span>
+                            {% elif appointment.payment_status == 'partial' %}
+                                <span class="badge badge-partial" title="Paid: Rs. {{ appointment.paid_amount|floatformat:2 }} | Remaining: Rs. {{ appointment.remaining_amount|floatformat:2 }}">
+                                    Partial
+                                </span>
+                                <div style="font-size: 11px; color: #64748b; margin-top: 3px;">
+                                    Paid: Rs. {{ appointment.paid_amount|floatformat:0 }}
+                                </div>
+                            {% else %}
+                                <span class="badge badge-unpaid">Unpaid</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if appointment.status == 'waiting' %}
+                                <span class="badge badge-waiting">Waiting</span>
+                            {% elif appointment.status == 'visited' %}
+                                <span class="badge badge-visited">Visited</span>
+                            {% elif appointment.status == 'cancelled' %}
+                                <span class="badge badge-cancelled">Cancelled</span>
+                            {% endif %}
+                        </td>
+                        <td>Rs. {{ doctor.fee|floatformat:2 }}</td>
+
+                        <!-- COMMISSION COLUMN (Dynamically computed from actual payments) -->
+                        <td>
+                            <span class="commission-value">
+                                {% if appointment.status == 'cancelled' or appointment.payment_status == 'unpaid' %}
+                                    <span style="color: #94a3b8;">Rs. 0.00</span>
+                                {% else %}
+                                    Rs. {{ appointment.earned_commission|floatformat:2 }}
+                                {% endif %}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if appointment.notes %}
+                                {{ appointment.notes|truncatechars:40 }}
+                            {% else %}
+                                <span style="color: #94a3b8;">No notes</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="empty-state">
+            <h3>No appointments found</h3>
+            <p>
+                {% if patient_query or from_date or to_date %}
+                    No appointments match your current filters.
+                {% else %}
+                    This doctor does not have any appointments yet.
+                {% endif %}
+            </p>
+            {% if not patient_query and not from_date and not to_date %}
+                <br>
+                <a href="{% url 'add_appointment' %}" class="btn btn-success">
+                    Create Appointment
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+
+<!-- COMMISSION PAYMENT HISTORY TABLE -->
+<div class="table-card">
+    <div class="table-header">
+        <h2>Commission Payment History</h2>
+        <span>{{ commission_payments|length }} payment{{ commission_payments|length|pluralize }}</span>
+    </div>
+
+    {% if commission_payments %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Payment Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in commission_payments %}
+                    <tr>
+                        <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                        <td><strong>Rs. {{ payment.amount|floatformat:2 }}</strong></td>
+                        <td>
+                            {% if payment.status == 'paid' %}
+                                <span class="badge badge-paid">Paid</span>
+                            {% elif payment.status == 'pending' %}
+                                <span class="badge badge-waiting">Pending</span>
+                            {% elif payment.status == 'cancelled' %}
+                                <span class="badge badge-cancelled">Cancelled</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="empty-state">
+            <h3>No commission payments</h3>
+            <p>No commission payment history has been recorded for this doctor.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

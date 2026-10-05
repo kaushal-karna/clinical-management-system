@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Appointment Payment | Clinical Management System
+{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 580px; margin: 30px auto; background: #ffffff; padding: 28px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+
+    <h2 style="margin-top: 0; color: #0f172a;">Partial Payment Details</h2>
+    <p style="color: #64748b; margin-bottom: 22px;">
+        Specify payment details for <strong>{{ patient.name|default:"the patient" }}</strong> with <strong>{{ doctor.name|default:"the doctor" }}</strong>.
+    </p>
+
+    {% if error %}
+        <div style="margin-bottom: 15px; padding: 10px 12px; border-radius: 6px; background: #fee2e2; border: 1px solid #fecaca; color: #991b1b;">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <!-- Doctor Charge Card -->
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="color: #64748b;">Doctor:</span>
+            <strong>{{ doctor }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="color: #64748b;">Scheduled Date:</span>
+            <span>{{ appointment_date|default:"Not specified" }}</span>
+        </div>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 10px 0;">
+        <div style="display: flex; justify-content: space-between; font-size: 16px;">
+            <strong style="color: #1e293b;">Doctor's Total Fee:</strong>
+            <strong style="color: #166534; font-size: 18px;">Rs. <span id="display-total-fee">{{ total_fee|floatformat:2 }}</span></strong>
+        </div>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <input type="hidden" id="raw_total_amount" value="{{ total_fee }}">
+
+        <!-- Amount Paid Input -->
+        <div class="form-group" style="margin-bottom: 18px;">
+            <label for="id_paid_amount" style="display: block; font-weight: 600; margin-bottom: 6px; color: #1e293b;">
+                Amount Paid (Rs.):
+            </label>
+            <input
+                type="number"
+                step="0.01"
+                min="0.01"
+                id="id_paid_amount"
+                name="paid_amount"
+                class="form-control no-scroll"
+                placeholder="Enter paid amount"
+                value="{{ current_paid }}"
+                style="width: 100%; padding: 10px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 6px;"
+                required
+            >
+            <div id="payment-error-msg" style="display: none; margin-top: 6px; color: #dc2626; font-size: 14px;"></div>
+        </div>
+
+        <!-- Remaining Balance Preview Card -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 8px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; margin-bottom: 25px;">
+            <strong style="font-size: 15px;">Remaining Balance to Pay:</strong>
+            <strong style="font-size: 18px;">Rs. <span id="display-remaining">0.00</span></strong>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 10px;">
+            <button
+                type="submit"
+                id="confirm-pay-btn"
+                class="btn btn-success"
+                style="flex: 1; padding: 11px; font-size: 15px; font-weight: 600; border-radius: 6px; cursor: pointer;"
+            >
+                Confirm & Review Appointment →
+            </button>
+            <a
+                href="{% url 'add_appointment' %}"
+                class="btn"
+                style="padding: 11px 18px; background: #e2e8f0; color: #334155; border-radius: 6px; text-decoration: none; font-weight: 500;"
+            >
+                Back to Form
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const totalRaw = parseFloat(document.getElementById("raw_total_amount").value) || 0;
+    const paidInput = document.getElementById("id_paid_amount");
+    const remainingDisplay = document.getElementById("display-remaining");
+    const errorMsg = document.getElementById("payment-error-msg");
+    const submitBtn = document.getElementById("confirm-pay-btn");
+
+    function calculateRemaining() {
+        const paid = parseFloat(paidInput.value);
+
+        if (isNaN(paid) || paid <= 0) {
+            remainingDisplay.textContent = totalRaw.toFixed(2);
+            errorMsg.style.display = "none";
+            submitBtn.disabled = false;
+            return;
+        }
+
+        if (paid >= totalRaw) {
+            errorMsg.textContent = "For partial payment, paid amount must be less than the total fee of Rs. " + totalRaw.toFixed(2);
+            errorMsg.style.display = "block";
+            remainingDisplay.textContent = "0.00";
+            submitBtn.disabled = true;
+            return;
+        }
+
+        errorMsg.style.display = "none";
+        submitBtn.disabled = false;
+        const remaining = totalRaw - paid;
+        remainingDisplay.textContent = remaining.toFixed(2);
+    }
+
+    if (paidInput) {
+        paidInput.addEventListener("input", calculateRemaining);
+        calculateRemaining();
+        paidInput.focus();
+    }
+});
+</script>
+{% endblock %}

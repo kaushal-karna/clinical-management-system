@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Add Patient | Clinical Management System
+{% endblock %}
+
+
+{% block content %}
+
+<div class="form-container">
+
+    <h1>Add Patient</h1>
+
+    <p style="margin: 10px 0 25px;">
+        Register a new patient.
+    </p>
+
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+        {% if request.GET.next %}
+            <input type="hidden" name="next" value="{{ request.GET.next }}">
+        {% endif %}
+
+        {% if form.non_field_errors %}
+
+            <div class="error">
+                {{ form.non_field_errors }}
+            </div>
+
+        {% endif %}
+
+
+        {% for field in form %}
+
+            <div class="form-group">
+
+                {{ field.label_tag }}
+
+                {{ field }}
+
+
+                {% if field.help_text %}
+
+                    <small>
+                        {{ field.help_text }}
+                    </small>
+
+                {% endif %}
+
+
+                {% for error in field.errors %}
+
+                    <div class="error">
+                        {{ error }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endfor %}
+
+
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 25px;">
+            <button
+                type="submit"
+                class="btn btn-success"
+                name="action"
+                value="save"
+            >
+                Save Patient
+            </button>
+
+            <button
+                type="submit"
+                class="btn"
+                name="action"
+                value="save_appointment"
+                style="background: #2563eb; color: #ffffff;"
+            >
+                Save & Add Appointment
+            </button>
+
+            <a
+                href="{% if request.GET.next == 'appointment' %}{% url 'add_appointment' %}{% else %}{% url 'patient_list' %}{% endif %}"
+                class="btn"
+                style="background: #e2e8f0; color: #334155; text-decoration: none;"
+            >
+                Cancel
+            </a>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

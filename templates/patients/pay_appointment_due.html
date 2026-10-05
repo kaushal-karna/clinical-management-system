@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Clear Due Payment | Clinical Management System
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'patients/css/patient_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 580px; margin: 30px auto; background: #ffffff; padding: 28px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+
+    <h2 style="margin-top: 0; color: #0f172a;">Clear Appointment Due</h2>
+    <p style="color: #64748b; margin-bottom: 20px;">
+        Patient: <strong>{{ appointment.patient.name }}</strong> | Token #{{ appointment.token_number }}
+    </p>
+
+    {% if error %}
+        <div style="margin-bottom: 15px; padding: 10px 12px; border-radius: 6px; background: #fee2e2; border: 1px solid #fecaca; color: #991b1b;">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <!-- Breakdown Card -->
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="color: #64748b;">Doctor:</span>
+            <strong>Dr. {{ appointment.doctor.name }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="color: #64748b;">Appointment Date:</span>
+            <span>{{ appointment.appointment_date }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="color: #64748b;">Total Consultation Fee:</span>
+            <strong>Rs. {{ total_fee|floatformat:2 }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="color: #64748b;">Previously Paid:</span>
+            <span style="color: #166534; font-weight: 600;">Rs. {{ current_paid|floatformat:2 }}</span>
+        </div>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 10px 0;">
+        <div style="display: flex; justify-content: space-between; font-size: 16px;">
+            <strong style="color: #991b1b;">Current Remaining Due:</strong>
+            <strong style="color: #dc2626; font-size: 18px;">Rs. <span id="max-due">{{ remaining_due|floatformat:2 }}</span></strong>
+        </div>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-group" style="margin-bottom: 18px;">
+            <label for="id_pay_amount" style="display: block; font-weight: 600; margin-bottom: 6px; color: #1e293b;">
+                Enter Amount to Pay (Rs.):
+            </label>
+            
+            <!-- Added: class="no-scroll" AND onwheel="this.blur()" -->
+            <input
+                type="number"
+                step="0.01"
+                min="0.01"
+                max="{{ remaining_due }}"
+                id="id_pay_amount"
+                name="pay_amount"
+                class="form-control no-scroll"
+                value="{{ remaining_due }}"
+                onwheel="this.blur();"
+                style="width: 100%; padding: 10px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 6px;"
+                required
+            >
+            <small style="color: #64748b; margin-top: 4px; display: block;">
+                Defaults to the full remaining due, or enter a partial amount.
+            </small>
+            <div id="payment-error-msg" style="display: none; margin-top: 6px; color: #dc2626; font-size: 14px;"></div>
+        </div>
+
+        <!-- Dynamic After-Payment Preview -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 8px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; margin-bottom: 25px;">
+            <strong style="font-size: 15px;">Balance After Payment:</strong>
+            <strong style="font-size: 18px;">Rs. <span id="display-after-balance">0.00</span></strong>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button
+                type="submit"
+                id="confirm-pay-btn"
+                class="btn btn-success"
+                style="flex: 1; padding: 11px; font-size: 15px; font-weight: 600; border-radius: 6px; cursor: pointer;"
+            >
+                Confirm Payment
+            </button>
+            <a
+                href="{% url 'patient_detail' appointment.patient.id %}"
+                class="btn"
+                style="padding: 11px 18px; background: #e2e8f0; color: #334155; border-radius: 6px; text-decoration: none; font-weight: 500;"
+            >
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const maxDue = parseFloat(document.getElementById("max-due").textContent) || 0;
+    const payInput = document.getElementById("id_pay_amount");
+    const afterBalance = document.getElementById("display-after-balance");
+    const errorMsg = document.getElementById("payment-error-msg");
+    const submitBtn = document.getElementById("confirm-pay-btn");
+
+    function updatePreview() {
+        const payVal = parseFloat(payInput.value);
+
+        if (isNaN(payVal) || payVal <= 0) {
+            afterBalance.textContent = maxDue.toFixed(2);
+            errorMsg.style.display = "none";
+            submitBtn.disabled = false;
+            return;
+        }
+
+        if (payVal > maxDue) {
+            errorMsg.textContent = "Amount cannot exceed the remaining due of Rs. " + maxDue.toFixed(2);
+            errorMsg.style.display = "block";
+            submitBtn.disabled = true;
+            afterBalance.textContent = "0.00";
+            return;
+        }
+
+        errorMsg.style.display = "none";
+        submitBtn.disabled = false;
+        const remaining = maxDue - payVal;
+        afterBalance.textContent = remaining.toFixed(2);
+    }
+
+    if (payInput) {
+        payInput.addEventListener("input", updatePreview);
+        updatePreview();
+        payInput.focus();
+        payInput.select();
+    }
+});
+</script>
+{% endblock %}

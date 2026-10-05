@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {{ patient.name }} | Clinical Management System
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'doctors/css/patient_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<!-- PATIENT HEADER -->
+<div class="doctor-header">
+    <div class="doctor-header-left">
+        <div class="doctor-avatar">
+            {{ patient.name|first|upper }}
+        </div>
+        <div>
+            <h1>{{ patient.name }}</h1>
+            <div class="doctor-specialization">Patient Profile</div>
+        </div>
+    </div>
+
+    <div class="doctor-actions">
+        <a href="{% url 'add_appointment' %}?patient={{ patient.id }}" class="btn btn-success">
+            + Add Appointment
+        </a>
+        <a href="{% url 'edit_patient' patient.id %}" class="btn btn-success">
+            Edit Patient
+        </a>
+        <form
+            method="POST"
+            action="{% url 'delete_patient' patient.id %}"
+            style="display: inline;"
+            onsubmit="return confirm('Are you sure you want to delete {{ patient.name }}? This will also delete the patient’s appointments. This action cannot be undone.');"
+        >
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+                Delete Patient
+            </button>
+        </form>
+        <a href="{% url 'patient_list' %}" class="btn">
+            Back
+        </a>
+    </div>
+</div>
+
+
+<!-- PATIENT STATISTICS -->
+<div class="detail-stats">
+    <div class="detail-stat-card">
+        <h4>Total Appointments</h4>
+        <div class="detail-stat-number">{{ total_appointments }}</div>
+    </div>
+    <div class="detail-stat-card">
+        <h4>Waiting</h4>
+        <div class="detail-stat-number">{{ waiting_appointments }}</div>
+    </div>
+    <div class="detail-stat-card">
+        <h4>Visited</h4>
+        <div class="detail-stat-number">{{ visited_appointments }}</div>
+    </div>
+    <div class="detail-stat-card">
+        <h4>Paid</h4>
+        <div class="detail-stat-number">{{ paid_appointments }}</div>
+    </div>
+    <div class="detail-stat-card">
+        <h4>Unpaid</h4>
+        <div class="detail-stat-number">{{ unpaid_appointments }}</div>
+    </div>
+    <div class="detail-stat-card">
+        <h4>Cancelled</h4>
+        <div class="detail-stat-number">{{ cancelled_appointments }}</div>
+    </div>
+</div>
+
+
+<!-- =========================================================
+     PAYMENT & DUES SECTION
+========================================================= -->
+<div class="detail-card" style="margin-bottom: 30px;">
+    <h2>Payment & Dues Status</h2>
+
+    {% if total_pending_amount > 0 %}
+        <!-- PENDING MONEY NOTICE -->
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #fef2f2; border: 1.5px solid #fecaca; padding: 18px 20px; border-radius: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+            <div>
+                <h3 style="margin: 0 0 6px; color: #991b1b; font-size: 18px;">
+                    ⚠️ Pending Dues Required
+                </h3>
+                <p style="margin: 0; color: #7f1d1d; font-size: 14px;">
+                    This patient has uncleared balances from previous or partial appointments.
+                </p>
+            </div>
+            <div style="text-align: right;">
+                <span style="font-size: 13px; color: #991b1b; font-weight: 600; text-transform: uppercase;">Total Pending Amount</span>
+                <div style="font-size: 26px; font-weight: 800; color: #dc2626;">
+                    Rs. {{ total_pending_amount|floatformat:2 }}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- ALL PAID NOTICE -->
+        <div style="display: flex; align-items: center; gap: 15px; background: #f0fdf4; border: 1.5px solid #bbf7d0; padding: 18px 20px; border-radius: 12px; margin-bottom: 20px;">
+            <div style="font-size: 30px;">🎉</div>
+            <div>
+                <h3 style="margin: 0 0 4px; color: #166534; font-size: 17px;">
+                    No Pending Dues!
+                </h3>
+                <p style="margin: 0; color: #15803d; font-size: 14px;">
+                    All scheduled appointments have been fully paid earlier. There are no outstanding payments for this patient.
+                </p>
+            </div>
+        </div>
+    {% endif %}
+
+    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-top: 1px solid #f1f5f9; font-size: 15px;">
+        <span style="color: #64748b;">Total Amount Cleared:</span>
+        <strong style="color: #166534;">Rs. {{ total_paid_amount|floatformat:2 }}</strong>
+    </div>
+</div>
+
+
+<!-- PATIENT INFORMATION -->
+<div class="detail-grid">
+    <div class="detail-card">
+        <h2>Patient Information</h2>
+        <div class="info-row">
+            <span class="info-label">Name</span>
+            <span class="info-value">{{ patient.name }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Phone</span>
+            <span class="info-value">
+                {% if patient.phone %}{{ patient.phone }}{% else %}Not provided{% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- APPOINTMENT SUMMARY CARD -->
+    <div class="detail-card">
+        <h2>Appointment Summary</h2>
+        <div class="info-row">
+            <span class="info-label">Total Appointments</span>
+            <span class="info-value">{{ total_appointments }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Doctors Visited</span>
+            <span class="info-value">{{ doctor_count }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Paid Appointments</span>
+            <span class="info-value">{{ paid_appointments }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Unpaid / Partial</span>
+            <span class="info-value">{{ unpaid_appointments }}</span>
+        </div>
+    </div>
+</div>
+
+
+<!-- FILTER APPOINTMENTS -->
+<div class="filter-card">
+    <h3>Filter Appointments</h3>
+    <form method="get" class="filter-form">
+        <div class="filter-group">
+            <label for="doctor">Doctor</label>
+            <input type="text" id="doctor" name="doctor" class="filter-input" placeholder="Search doctor name..." value="{{ doctor_query }}">
+        </div>
+        <div class="filter-group">
+            <label for="from_date">From Date</label>
+            <input type="date" id="from_date" name="from_date" class="filter-input" value="{{ from_date }}">
+        </div>
+        <div class="filter-group">
+            <label for="to_date">To Date</label>
+            <input type="date" id="to_date" name="to_date" class="filter-input" value="{{ to_date }}">
+        </div>
+        <button type="submit" class="filter-button">Filter</button>
+        <a href="{% url 'patient_detail' patient.id %}" class="clear-button">Clear</a>
+    </form>
+</div>
+
+
+<!-- APPOINTMENT HISTORY TABLE -->
+<div class="table-card">
+    <div class="table-header">
+        <h2>Appointment History</h2>
+        <span>
+            {% if doctor_query or from_date or to_date %}
+                {{ filtered_appointment_count }} filtered / {{ total_appointments }} total
+            {% else %}
+                {{ total_appointments }} total
+            {% endif %}
+        </span>
+    </div>
+
+    {% if appointments %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Doctor</th>
+                    <th>Specialization</th>
+                    <th>Date</th>
+                    <th>Token</th>
+                    <th>Type</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th>Consultation Fee</th>
+                    <th>Action</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appointment in appointments %}
+                    <tr>
+                        <td>
+                            <strong>
+                                <a href="{% url 'doctor_detail' appointment.doctor.id %}">
+                                    Dr. {{ appointment.doctor.name }}
+                                </a>
+                            </strong>
+                        </td>
+                        <td>{{ appointment.doctor.specialization|default:"Not specified" }}</td>
+                        <td>{{ appointment.appointment_date|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="token">#{{ appointment.token_number }}</span>
+                        </td>
+                        <td>
+                            <span class="badge-type">
+                                {{ appointment.get_appointment_type_display }}
+                            </span>
+
+                        </td>
+
+                        <!-- PAYMENT STATUS COLUMN -->
+                        <td>
+                            {% if appointment.payment_status == 'paid' %}
+                                <span class="badge badge-paid">Paid</span>
+                            {% elif appointment.payment_status == 'partial' %}
+                                <span class="badge badge-partial">Partial</span>
+                            {% else %}
+                                <span class="badge badge-unpaid">Unpaid</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if appointment.status == 'waiting' %}
+                                <span class="badge badge-waiting">Waiting</span>
+                            {% elif appointment.status == 'visited' %}
+                                <span class="badge badge-visited">Visited</span>
+                            {% elif appointment.status == 'cancelled' %}
+                                <span class="badge badge-cancelled">Cancelled</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if appointment.appointment_type == 'followup_free' %}
+                                <span style="color: #64748b;">Rs. 0.00 <small>(Free)</small></span>
+                            {% else %}
+                                Rs. {{ appointment.doctor.fee|floatformat:2 }}
+                            {% endif %}
+                        </td>
+
+                        <!-- ACTION: PAY DUE BUTTON -->
+                        <td>
+                            {% if appointment.status != 'cancelled' and appointment.appointment_type != 'followup_free' %}
+                                {% if appointment.payment_status == 'partial' or appointment.payment_status == 'unpaid' %}
+                                    <a
+                                        href="{% url 'pay_appointment_due' appointment.id %}"
+                                        class="btn-pay-now"
+                                        title="Pay remaining amount"
+                                    >
+                                        💳 Pay Due
+                                    </a>
+                                {% else %}
+                                    <span style="color: #166534; font-weight: 600; font-size: 13px;">✓ Cleared</span>
+                                {% endif %}
+                            {% else %}
+                                <span style="color: #94a3b8;">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if appointment.notes %}
+                                {{ appointment.notes|truncatechars:35 }}
+                            {% else %}
+                                <span style="color: #94a3b8;">No notes</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="empty-state">
+            <h3>No appointments found</h3>
+            <p>
+                {% if doctor_query or from_date or to_date %}
+                    No appointments match your current filters.
+                {% else %}
+                    This patient does not have any appointments yet.
+                {% endif %}
+            </p>
+            {% if not doctor_query and not from_date and not to_date %}
+                <br>
+                <a href="{% url 'add_appointment' %}?patient={{ patient.id }}" class="btn btn-success">
+                    Create Appointment
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Patient Detail JS -->
+{% comment %} <script src="{% static 'patients/js/patient_detail.js' %}"></script> {% endcomment %}
+
+{% endblock %}

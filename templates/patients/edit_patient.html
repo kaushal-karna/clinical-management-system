@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}
+
+Edit Patient | Clinical Management System
+
+{% endblock %}
+
+{% block content %}
+
+<div class="form-container">
+
+
+<h1>Edit Patient</h1>
+
+<p style="margin: 10px 0 25px;">
+
+    Update information for
+
+    <strong>
+        {{ patient.name }}
+    </strong>.
+
+</p>
+
+
+<form method="POST">
+
+    {% csrf_token %}
+
+
+    <!-- FORM ERRORS -->
+
+    {% if form.non_field_errors %}
+
+        <div class="error">
+            {{ form.non_field_errors }}
+        </div>
+
+    {% endif %}
+
+
+    <!-- FORM FIELDS -->
+
+    {% for field in form %}
+
+        <div class="form-group">
+
+            {{ field.label_tag }}
+
+            {{ field }}
+
+
+            {% if field.help_text %}
+
+                <small>
+                    {{ field.help_text }}
+                </small>
+
+            {% endif %}
+
+
+            {% for error in field.errors %}
+
+                <div class="error">
+                    {{ error }}
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% endfor %}
+
+
+    <!-- BUTTONS -->
+
+    <button
+        type="submit"
+        class="btn btn-success"
+    >
+        Update Patient
+    </button>
+
+
+    <a
+        href="{% url 'patient_detail' patient.id %}"
+        class="btn"
+    >
+        Cancel
+    </a>
+
+</form>
+
+</div>
+
+{% endblock %}

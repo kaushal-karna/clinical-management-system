@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Home | Clinical Management System
+{% endblock %}
+
+
+{% block content %}
+
+<!-- HERO SECTION -->
+
+<div class="card" style="text-align: center; padding: 50px 25px;">
+
+    <h1>Welcome to Clinical Management System</h1>
+
+    <p style="margin: 15px 0;">
+        Manage doctors, patients, appointments and payments
+        from one centralized system.
+    </p>
+
+    <div style="margin-top: 25px;">
+
+        <a href="{% url 'dashboard' %}" class="btn btn-success">
+            Go to Dashboard
+        </a>
+
+        <a href="{% url 'doctor_list' %}" class="btn ">
+            View Doctors
+        </a>
+
+        <a href="{% url 'patient_list' %}" class="btn">
+            View Patients
+        </a>
+
+        <a href="{% url 'add_appointment' %}" class="btn">
+            Add Appointment
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- SYSTEM FEATURES -->
+
+<h2 style="margin-top: 40px;">System Features</h2>
+
+<div class="cards">
+
+    <div class="card">
+        <h3>Doctors</h3>
+        <p>
+            Add and manage doctor profiles, consultation fees,
+            specialization and commission information.
+        </p>
+    </div>
+
+
+    <div class="card">
+        <h3>Patients</h3>
+        <p>
+            Register patients and maintain their basic
+            information such as name and date of birth.
+        </p>
+    </div>
+
+
+    <div class="card">
+        <h3>Appointments</h3>
+        <p>
+            Add and manage doctor appointments, token numbers,
+            appointment status and appointment types.
+        </p>
+    </div>
+
+
+    <div class="card">
+        <h3>Commission</h3>
+        <p>
+            Track doctor commissions using either percentage
+            or fixed amount.
+        </p>
+    </div>
+
+</div>
+
+
+<!-- QUICK ACTIONS -->
+
+<h2 style="margin-top: 40px;">Quick Actions</h2>
+
+<div class="cards">
+
+    <div class="card">
+
+        <h3>Add Doctor</h3>
+
+        <p>
+            Create a new doctor profile.
+        </p>
+
+        <br>
+
+        <a href="{% url 'add_doctor' %}" class="btn">
+            Add Doctor
+        </a>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>Add Patient</h3>
+
+        <p>
+            Register a new patient.
+        </p>
+
+        <br>
+
+        <a href="{% url 'add_patient' %}" class="btn">
+            Add Patient
+        </a>
+
+    </div>
+
+    <div class="card">
+
+        <h3>Add Appointment</h3>
+
+        <p>
+            Add a new Appointment.
+        </p>
+
+        <br>
+
+        <a href="{% url 'add_appointment' %}" class="btn">
+            Add Appointment
+        </a>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>Dashboard</h3>
+
+        <p>
+            View overall system information.
+        </p>
+
+        <br>
+
+        <a href="{% url 'dashboard' %}" class="btn">
+            Open Dashboard
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    Pay Commission | Clinical Management System
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'doctors/css/doctor_detail.css' %}">
+<style>
+    /* ================================
+       PAY COMMISSION PAGE
+    ================================= */
+
+    .commission-payment-container {
+        max-width: 650px;
+        margin: 50px auto;
+        background: #ffffff;
+        padding: 35px;
+        border-radius: 14px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    .commission-header {
+        margin-bottom: 30px;
+    }
+
+    .commission-header h1 {
+        color: #1e3a5f;
+        font-size: 32px;
+        margin-bottom: 8px;
+    }
+
+    .commission-header p {
+        color: #666;
+        font-size: 15px;
+    }
+
+    /* Doctor information */
+
+    .doctor-info {
+        background: #f4f7fb;
+        border-left: 4px solid #1e3a5f;
+        padding: 16px 18px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+    }
+
+    .doctor-info p {
+        margin: 0;
+        font-size: 16px;
+        color: #333;
+    }
+
+    .doctor-info strong {
+        color: #1e3a5f;
+    }
+
+    /* Pending commission */
+
+    .pending-box {
+        background: #fff8e6;
+        border: 1px solid #ffe3a3;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+
+    .pending-label {
+        display: block;
+        color: #765500;
+        font-size: 14px;
+        margin-bottom: 6px;
+        font-weight: bold;
+    }
+
+    .pending-amount {
+        font-size: 28px;
+        font-weight: bold;
+        color: #b77900;
+    }
+
+    /* Form */
+
+    .payment-form p {
+        margin-bottom: 20px;
+    }
+
+    .payment-form label {
+        display: block;
+        margin-bottom: 7px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .payment-form input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #cfd6df;
+        border-radius: 7px;
+        font-size: 16px;
+        outline: none;
+        transition: 0.2s;
+        background: #fff;
+    }
+
+    .payment-form input:focus {
+        border-color: #1e3a5f;
+        box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.10);
+    }
+
+    /* Error */
+
+    .payment-form .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 6px 0 0;
+        color: #dc3545;
+        font-size: 14px;
+    }
+
+    /* Buttons */
+
+    .payment-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 25px;
+    }
+
+    .pay-button {
+        flex: 1;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 7px;
+        background: #198754;
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .pay-button:hover {
+        background: #157347;
+    }
+
+    .cancel-button {
+        flex: 1;
+        padding: 12px 20px;
+        border-radius: 7px;
+        background: #6c757d;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: bold;
+        transition: 0.2s;
+    }
+
+    .cancel-button:hover {
+        background: #5c636a;
+        text-decoration: none;
+    }
+
+    /* Mobile */
+
+    @media (max-width: 600px) {
+
+        .commission-payment-container {
+            margin: 25px 15px;
+            padding: 25px 20px;
+        }
+
+        .commission-header h1 {
+            font-size: 26px;
+        }
+
+        .payment-actions {
+            flex-direction: column;
+        }
+
+    }
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="commission-payment-container">
+
+    <!-- Header -->
+
+    <div class="commission-header">
+
+        <h1>Pay Commission</h1>
+
+        <p>
+            Record a commission payment for the doctor.
+        </p>
+
+    </div>
+
+
+    <!-- Doctor Information -->
+
+    <div class="doctor-info">
+
+        <p>
+            Doctor:
+            <strong>{{ doctor }}</strong>
+        </p>
+
+    </div>
+
+
+    <!-- Pending Commission -->
+
+    <div class="pending-box">
+
+        <span class="pending-label">
+            Pending Commission
+        </span>
+
+        <div class="pending-amount">
+            Rs. {{ pending_amount|floatformat:2 }}
+        </div>
+
+    </div>
+
+
+    <!-- Payment Form -->
+
+    <form method="POST" class="payment-form">
+
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <div class="payment-actions">
+
+            <button
+                type="submit"
+                class="pay-button"
+            >
+                Pay Commission
+            </button>
+
+            <a
+                href="{% url 'doctor_detail' doctor.id %}"
+                class="cancel-button"
+            >
+                Cancel
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

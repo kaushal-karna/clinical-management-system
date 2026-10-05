@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Add Appointment | Clinical Management System
+{% endblock %}
+
+{% block content %}
+
+<div class="form-container" style="max-width: 650px; margin: 30px auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
+
+    <h1 style="margin-top: 0; color: #0f172a;">Add Appointment</h1>
+
+    <p style="margin: 5px 0 20px; color: #64748b;">
+        Create a new appointment for a patient.
+    </p>
+
+    <!-- Flatpickr CSS -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    >
+
+    <!-- PARTIAL PAYMENT CONFIGURED NOTICE (Displays after returning from payment page) -->
+    {% if partial_payment_info %}
+        <div style="margin-bottom: 20px; padding: 14px 16px; border-radius: 8px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;">
+            <div style="font-weight: 700; margin-bottom: 4px; font-size: 15px;">
+                ✓ Partial Payment Configured
+            </div>
+            <div style="font-size: 14px; color: #15803d;">
+                <strong>Paid:</strong> Rs. {{ partial_payment_info.paid_amount|floatformat:2 }} &nbsp;|&nbsp;
+                <strong>Doctor Fee:</strong> Rs. {{ partial_payment_info.total_amount|floatformat:2 }} &nbsp;|&nbsp;
+                <strong>Remaining:</strong> Rs. {{ partial_payment_info.remaining_amount|floatformat:2 }}
+            </div>
+            <div style="font-size: 13px; color: #166534; margin-top: 6px;">
+                Please review all fields below and click <strong>"Save Appointment"</strong> to finalize.
+            </div>
+        </div>
+    {% endif %}
+
+    <form method="POST" id="appointment-form">
+        {% csrf_token %}
+
+        <!-- Hidden field retaining configured paid amount -->
+        <input
+            type="hidden"
+            name="paid_amount"
+            id="hidden_paid_amount"
+            value="{% if partial_payment_info %}{{ partial_payment_info.paid_amount }}{% endif %}"
+        >
+
+        {% if form.non_field_errors %}
+            <div class="error" style="margin-bottom: 15px; padding: 10px; border-radius: 6px; background: #fee2e2; color: #991b1b;">
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% for field in form %}
+            <div class="form-group" style="margin-bottom: 18px;">
+                {{ field.label_tag }}
+
+                <!-- PATIENT FIELD WITH ADD PATIENT BUTTON -->
+                {% if field.name == 'patient' %}
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div style="flex: 1;">
+                            {{ field }}
+                        </div>
+                        <a
+                            href="{% url 'add_patient' %}?next=appointment"
+                            class="btn btn-success"
+                            style="white-space: nowrap;"
+                        >
+                            + Add Patient
+                        </a>
+                    </div>
+
+                <!-- ALL OTHER FIELDS (Payment status is kept simple here) -->
+                {% else %}
+                    {{ field }}
+                {% endif %}
+
+                {% if field.help_text %}
+                    <small style="color: #64748b;">{{ field.help_text }}</small>
+                {% endif %}
+
+                {% for error in field.errors %}
+                    <div class="error" style="margin-top: 5px; color: #dc2626;">{{ error }}</div>
+                {% endfor %}
+
+                <!-- DOCTOR OFF-DAYS MESSAGE -->
+                {% if field.name == 'appointment_date' %}
+                    <div
+                        id="doctor-off-days"
+                        style="display: none; margin-top: 7px; padding: 8px 10px; border-radius: 6px; font-size: 14px;"
+                    ></div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <!-- Doctor Off-Days Data -->
+        <script id="doctor-off-days-data" type="application/json">
+        {
+            {% for doctor in form.fields.doctor.queryset %}
+                "{{ doctor.id }}": "{{ doctor.off_days|default:''|escapejs }}"{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        }
+        </script>
+
+        <!-- Token Notice -->
+        <div style="padding: 12px; margin-bottom: 24px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; color: #475569; font-size: 14px;">
+            <strong>Token:</strong> Automatically generated upon saving.
+        </div>
+
+        <!-- FORM ACTION BUTTONS (AT LAST) -->
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+
+            <!-- Save Appointment Button -->
+            <button
+                type="submit"
+                name="action"
+                value="save"
+                id="save-appointment-btn"
+                class="btn btn-success"
+            >
+                Save Appointment
+            </button>
+
+            <!-- PAY HERE BUTTON (Appears at last when status is Partial) -->
+            <button
+                type="submit"
+                name="action"
+                value="pay_here"
+                id="pay-here-btn"
+                class="btn"
+                style="display: none; background: #2563eb; color: #ffffff; padding: 9px 18px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;"
+            >
+                💳 {% if partial_payment_info %}Change Payment Details{% else %}Pay Here →{% endif %}
+            </button>
+
+            <!-- Cancel Button -->
+            <a
+                href="{% url 'dashboard' %}"
+                class="btn"
+                style="background: #e2e8f0; color: #334155; padding: 9px 16px; border-radius: 6px; text-decoration: none;"
+            >
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<!-- Add Appointment JS -->
+<script src="{% static 'js/add_appointment.js' %}"></script>
+
+{% endblock %}

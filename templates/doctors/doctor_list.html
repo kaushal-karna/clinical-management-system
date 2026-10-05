@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}
+
+    Doctors | Clinical Management System
+
+{% endblock %}
+
+{% block content %}
+
+<div class="card">
+
+    <div style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    ">
+
+        <div>
+            <h1>Doctors</h1>
+
+            <p style="margin-top: 8px; color: #64748b;">
+                View and manage all doctors in the system.
+            </p>
+        </div>
+
+        <a
+            href="{% url 'add_doctor' %}"
+            class="btn btn-success"
+        >
+            + Add Doctor
+        </a>
+
+    </div>
+
+
+    {% if doctors %}
+
+        <div class="cards">
+
+            {% for doctor in doctors %}
+
+                <div class="card">
+
+                    <h3>
+                        Dr. {{ doctor.name }}
+                    </h3>
+
+                    <p style="margin: 10px 0;">
+                        <strong>Specialization:</strong>
+
+                        {{ doctor.specialization|default:"Not specified" }}
+                    </p>
+
+                    <p style="margin: 10px 0;">
+                        <strong>Consultation Fee:</strong>
+
+                        Rs. {{ doctor.fee|floatformat:2 }}
+                    </p>
+
+                    <br>
+
+                    <a
+                        href="{% url 'doctor_detail' doctor.id %}"
+                        class="btn btn-success"
+                    >
+                        View Doctor
+                    </a>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div style="
+            text-align: center;
+            padding: 50px 20px;
+        ">
+
+            <h3>No Doctors Found</h3>
+
+            <p style="margin: 10px 0 20px;">
+                There are no doctors registered yet.
+            </p>
+
+            <a
+                href="{% url 'add_doctor' %}"
+                class="btn btn-success"
+            >
+                + Add Doctor
+            </a>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

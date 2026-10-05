@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Edit Doctor | Clinical Management System
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    #other-specialization-group {
+        display: none;
+        margin-top: -8px;
+        margin-bottom: 20px;
+        padding: 14px 16px;
+        background: #f8fafc;
+        border: 1.5px dashed #94a3b8;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="form-container" style="max-width: 650px; margin: 30px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
+
+    <h1 style="margin-top: 0; color: #0f172a;">Edit Dr. {{ doctor.name }}</h1>
+
+    <p style="margin: 5px 0 25px; color: #64748b;">
+        Update doctor information below.
+    </p>
+
+    <form method="POST" id="doctor-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="error" style="margin-bottom: 15px; padding: 10px; border-radius: 6px; background: #fee2e2; color: #991b1b;">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% for field in form %}
+            {% if field.name == "other_specialization" %}
+                <!-- Strictly hidden by default with inline style -->
+                <div
+                    class="form-group"
+                    id="other-specialization-group"
+                    style="display: none;"
+                >
+                    <label for="{{ field.id_for_label }}" style="font-weight: 600; color: #1e293b; margin-bottom: 6px; display: block;">
+                        Specify Other Specialization: <span style="color: #dc2626;">*</span>
+                    </label>
+                    {{ field }}
+
+                    {% for error in field.errors %}
+                        <div class="error" style="margin-top: 5px; color: #dc2626;">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+            {% else %}
+                <div class="form-group" style="margin-bottom: 18px;">
+                    {{ field.label_tag }}
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <small style="color: #64748b;">{{ field.help_text }}</small>
+                    {% endif %}
+
+                    {% for error in field.errors %}
+                        <div class="error" style="margin-top: 5px; color: #dc2626;">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <!-- COMMISSION PREVIEW -->
+        <div
+            id="commission-preview"
+            style="
+                margin: 18px 0;
+                padding: 12px 16px;
+                border-radius: 8px;
+                background: #f0fdf4;
+                border: 1px solid #bbf7d0;
+                color: #166534;
+                font-weight: 600;
+                display: none;
+            "
+        >
+            Estimated Commission / Appointment:
+            <span id="commission-result" style="font-weight: 700;">Rs. 0.00</span>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 25px;">
+            <button type="submit" class="btn btn-success" style="padding: 10px 22px;">
+                Update Doctor
+            </button>
+            <a href="{% url 'doctor_detail' doctor.id %}" class="btn" style="background: #e2e8f0; color: #334155; padding: 10px 18px; border-radius: 6px; text-decoration: none;">
+                Cancel
+            </a>
+        </div>
+
+    </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const doctorForm = document.getElementById("doctor-form");
+    const specializationField = document.getElementById("id_specialization");
+    const otherSpecializationField = document.getElementById("id_other_specialization");
+    const otherSpecializationGroup = document.getElementById("other-specialization-group");
+
+    function toggleOtherSpecialization() {
+        if (!specializationField || !otherSpecializationGroup) {
+            return;
+        }
+
+        const selectedValue = (specializationField.value || "").trim().toUpperCase();
+
+        if (selectedValue === "OTHER") {
+            otherSpecializationGroup.style.display = "block";
+            if (otherSpecializationField) {
+                otherSpecializationField.required = true;
+            }
+        } else {
+            // Immediately hides when MBBS or anything else is selected
+            otherSpecializationGroup.style.display = "none";
+            if (otherSpecializationField) {
+                otherSpecializationField.required = false;
+            }
+        }
+    }
+
+    if (specializationField) {
+        specializationField.addEventListener("change", toggleOtherSpecialization);
+        toggleOtherSpecialization(); // Check on page load
+    }
+
+    // Prevent accidental submit on Enter key
+    if (doctorForm) {
+        doctorForm.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                if (e.target.tagName === "INPUT" && e.target.type !== "submit") {
+                    e.preventDefault();
+                    const focusables = Array.from(
+                        doctorForm.querySelectorAll("input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled])")
+                    );
+                    const idx = focusables.indexOf(e.target);
+                    if (idx > -1 && idx + 1 < focusables.length) {
+                        focusables[idx + 1].focus();
+                    }
+                    return false;
+                }
+            }
+        });
+    }
+
+    // Commission Preview
+    const feeField = document.getElementById("id_fee");
+    const commissionTypeField = document.getElementById("id_commission_type");
+    const commissionField = document.getElementById("id_commission");
+    const preview = document.getElementById("commission-preview");
+    const result = document.getElementById("commission-result");
+
+    function calculateCommission() {
+        if (!feeField || !commissionTypeField || !commissionField || !preview || !result) return;
+
+        const fee = parseFloat(feeField.value) || 0;
+        const commission = parseFloat(commissionField.value) || 0;
+        const commissionType = commissionTypeField.value;
+
+        if (fee <= 0 || commission <= 0) {
+            preview.style.display = "none";
+            return;
+        }
+
+        let commissionAmount = 0;
+        if (commissionType === "percentage") {
+            commissionAmount = (fee * commission) / 100;
+        } else {
+            commissionAmount = commission;
+        }
+
+        result.textContent = "Rs. " + commissionAmount.toFixed(2);
+        preview.style.display = "block";
+    }
+
+    if (feeField && commissionField && commissionTypeField) {
+        feeField.addEventListener("input", calculateCommission);
+        commissionField.addEventListener("input", calculateCommission);
+        commissionTypeField.addEventListener("change", calculateCommission);
+        calculateCommission();
+    }
+});
+</script>
+
+{% endblock %}

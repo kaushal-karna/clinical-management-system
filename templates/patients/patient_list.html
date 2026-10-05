@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}
+
+    Patients | Clinical Management System
+
+{% endblock %}
+
+{% block content %}
+
+<div class="card">
+
+    <div style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    ">
+
+        <div>
+            <h1>Patients</h1>
+
+            <p style="margin-top: 8px; color: #64748b;">
+                View all registered patients in the system.
+            </p>
+        </div>
+
+        <a
+            href="{% url 'add_patient' %}"
+            class="btn btn-success"
+        >
+            + Add Patient
+        </a>
+
+    </div>
+
+
+    {% if patients %}
+
+        <div class="cards">
+
+            {% for patient in patients %}
+
+                <div class="card">
+
+                    <h3>
+                        {{ patient.name }}
+                    </h3>
+
+                    <p style="margin: 10px 0;">
+                        <strong>Phone:</strong>
+
+                        {{ patient.phone|default:"Not provided" }}
+                    </p>
+
+                    <br>
+
+                    <a
+                        href="{% url 'patient_detail' patient.id %}"
+                        class="btn btn-success"
+                    >
+                        View Patient
+                    </a>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div style="
+            text-align: center;
+            padding: 50px 20px;
+        ">
+
+            <h3>No Patients Found</h3>
+
+            <p style="margin: 10px 0 20px;">
+                There are no patients registered yet.
+            </p>
+
+            <a
+                href="{% url 'add_patient' %}"
+                class="btn btn-success"
+            >
+                + Add Patient
+            </a>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
