@@ -1,3 +1,4 @@
+
 # Clinic Management System (Dhada)
 
 A comprehensive, responsive web application designed for outpatient clinics, medical centers, and private practices to streamline doctor management, patient records, appointment scheduling, and billing workflows.
@@ -7,32 +8,37 @@ A comprehensive, responsive web application designed for outpatient clinics, med
 ## 🌟 Key Features
 
 ### 👨‍⚕️ Doctor Management
+
 - **Doctor Profiles**: Manage doctor details including name, specialization, arrival time, consultation fees, and weekly off-days.
 - **Dynamic Specializations**: Built-in support for medical specializations (General Physician, Cardiologist, Dermatologist, ENT, Gynecologist, etc.) with custom "Other" specification support.
-- **Commission Tracking**: 
+- **Commission Tracking**:
   - Supports both **Percentage-based (%)** and **Fixed-amount (Rs.)** commission structures.
   - Automatic calculation of doctor earnings on visited appointments.
   - Comprehensive commission payout history and pending balance tracking.
 
 ### 👥 Patient Management
+
 - **Fast Registration**: Quick patient intake with seamless redirection to appointment scheduling.
-- **Patient Detail Dashboard**: 
+- **Patient Detail Dashboard**:
   - Complete history of past visits, waiting consultations, and cancellations.
   - Financial overview of total paid vs. outstanding dues.
   - Direct quick actions to book new appointments, edit profiles, or clear pending balances.
 
 ### 📅 Appointment & Queue Management
+
 - **Automated Token Generation**: Auto-incrementing daily queue token numbers per doctor and date.
 - **Doctor Availability Check**: Intelligent validation that checks and warns against booking on doctor's scheduled off-days.
 - **Appointment Types**: Supports **Regular**, **Follow-Up (Paid)**, and **Follow-Up (Free)** visits.
 - **Status Workflow**: Manage appointment status through **Waiting**, **Visited**, and **Cancelled**.
 
 ### 💳 Billing & Payment Tracking
+
 - **Flexible Payment Statuses**: Fully tracks **Paid**, **Partial**, and **Unpaid** appointments.
 - **Partial Payment Workflow**: Dedicated workflow allowing partial upfront payments and tracking remaining balances.
 - **Due Clearance**: Easily settle outstanding balances directly from the patient’s profile.
 
 ### 📊 Dashboard & Analytics
+
 - Overview of key metrics: Total Doctors, Patients, Appointments, Paid/Unpaid counts, and queue status.
 - Quick navigation shortcuts for front-desk and clinical staff.
 
@@ -88,6 +94,7 @@ Dhada/
 ### Prerequisites
 
 Ensure you have the following installed:
+
 - **Python 3.10+**
 - **pip** (Python package manager)
 - **Git**
@@ -95,12 +102,13 @@ Ensure you have the following installed:
 ### Installation
 
 1. **Clone the repository**:
+
    ```bash
-   git clone https://github.com/<your-username>/<repo-name>.git
+   git clone https://github.com/kaushal-karna/clinical-management-system.git
    cd Dhada
    ```
-
 2. **Create and activate a virtual environment**:
+
    - On Windows:
      ```powershell
      python -m venv venv
@@ -111,33 +119,33 @@ Ensure you have the following installed:
      python3 -m venv venv
      source venv/bin/activate
      ```
-
 3. **Install dependencies**:
+
    ```bash
    pip install -r requirements.txt
    ```
-
 4. **Apply database migrations**:
+
    ```bash
    python manage.py migrate
    ```
-
 5. **(Optional) Load initial fixture data**:
+
    ```bash
    python manage.py loaddata data.json
    ```
-
 6. **Create an administrator account**:
+
    ```bash
    python manage.py createsuperuser
    ```
-
 7. **Start the development server**:
+
    ```bash
    python manage.py runserver
    ```
-
 8. **Access the application**:
+
    - Web App: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
    - Admin Panel: [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
 
